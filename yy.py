@@ -1,34 +1,44 @@
 import streamlit as st
-import youtube_dl
+from pytube import YouTube
 
-st.set_page_config(page_title="YouTube下載器", page_icon=":guardsman:", layout="wide")
+st.title("YouTube Downloader")
 
-# create search box
-search_box = st.sidebar.text_input("輸入YouTube鏈接")
+# Get YouTube video URL from user
+url = st.text_input("Enter YouTube video URL")
 
-if search_box:
-    with youtube_dl.YoutubeDL() as ydl:
-        # get video information
-        video = ydl.extract_info(search_box, download=False)
-        title = video['title']
-        thumbnail = video['thumbnail']
-        duration = video['duration']
-        formats = video['formats']
+# Download video or audio
+type_to_download = st.selectbox("Choose which type of file to download", ["Video", "Audio"])
 
-        # display video information
-        st.write(f"標題：{title}")
-        st.image(thumbnail, width=200)
-        st.write(f"影片時長：{duration} 秒")
+# Download function
+def download_video(url):
+    yt = YouTube(url)
 
-        # display download options
-        st.write("影片下載：")
-        for f in formats:
-            if f['format_note'] == '1080p':
-                st.write(f"{f['format_note']} - {f['filesize'] / 1048576:.2f}MB - " +
-                         f"[下載]({f['url']})")
-        
-        st.write("音訊下載：")
-        for f in formats:
-            if f['format_note'] == 'audio only':
-                st.write(f"{f['acodec']} - {f['filesize'] / 1048576:.2f}MB - " +
-                         f"[下載]({f['url']})")
+    # Get available video and audio streams
+    streams = yt.streams.filter(progressive=True, file_extension="mp4")
+    audio_streams = yt.streams.filter(only_audio=True)
+
+    # Display available streams to user
+    st.write("Available video streams:")
+    for stream in streams:
+        st.write(stream.resolution, stream.mime_type, stream.filesize)
+
+    st.write("Available audio streams:")
+    for stream in audio_streams:
+        st.write(stream.abr, stream.mime_type, stream.filesize)
+
+    # Choose stream and download
+    if type_to_download == "Video":
+        chosen_stream = st.selectbox("Choose video stream to download", streams)
+    elif type_to_download == "Audio":
+        chosen_stream = st.selectbox("Choose audio stream to download", audio_streams)
+
+    st.write("Downloading...")
+    chosen_stream.download()
+    st.write("Download complete.")
+
+# Download button
+if st.button("Download"):
+    if url == "":
+        st.write("Please enter a URL.")
+    else:
+        download_video(url)
