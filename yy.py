@@ -1,55 +1,46 @@
 import streamlit as st
-from pytube import YouTube
-import moviepy.editor as mp
+import pytube
+import os
 
-st.title("YouTube Downloader")
+# 設置網頁標題和畫面布局
+st.set_page_config(page_title="YouTube Downloader", layout="wide")
 
-# Function to download video
-def download_video(video_url):
-    try:
-        yt = YouTube(video_url)
-        st.write(f"Title: {yt.title}")
-        st.write(f"Number of views: {yt.views}")
-        st.write(f"Length of video: {yt.length} seconds")
-        stream = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
-        stream.download()
-        st.success("Video Downloaded Successfully")
-    except Exception as e:
-        st.warning("Error: Could not download video")
-        st.write(e)
+# 定義下載函數
+def download(url, format):
+    # 解析影片
+    video = pytube.YouTube(url)
 
-# Function to download audio
-def download_audio(video_url):
-    try:
-        yt = YouTube(video_url)
-        st.write(f"Title: {yt.title}")
-        st.write(f"Number of views: {yt.views}")
-        st.write(f"Length of audio: {yt.length} seconds")
-        audio = yt.streams.filter(only_audio=True).first()
-        audio.download()
-        audio_file = audio.default_filename
-        audio_clip = mp.AudioFileClip(audio_file)
-        audio_clip.write_audiofile(f"{yt.title}.mp3")
-        st.success("Audio Downloaded Successfully")
-    except Exception as e:
-        st.warning("Error: Could not download audio")
-        st.write(e)
+    # 選擇下載的流
+    if format == "Video":
+        stream = video.streams.filter(file_extension='mp4', res='720p').first()
+    else:
+        stream = video.streams.filter(only_audio=True).first()
 
-# Main function
+    # 下載影片或音頻
+    stream.download()
+
+    # 提示下載完成
+    st.success('下載完成！')
+    
+# 定義主函數
 def main():
-    st.sidebar.title("Select Download Type")
-    download_type = st.sidebar.selectbox("", ("Video", "Audio"))
+    # 設置應用程序的標題和説明
+    st.title("YouTube Downloader")
+    st.write("輸入YouTube鏈接和下載格式。支持下載720p MP4視頻和音頻文件。")
 
-    st.subheader("Enter YouTube URL")
-    video_url = st.text_input("", "Paste the YouTube URL here...")
+    # 創建表單
+    form = st.form(key='my_form')
+    url = form.text_input(label='輸入YouTube鏈接')
+    format = form.selectbox('下載格式', ('Video', 'Audio'))
+    submit = form.form_submit_button(label='下載')
 
-    if st.button("Download"):
-        if not video_url:
-            st.warning("Please enter a valid YouTube URL")
-        elif download_type == "Video":
-            download_video(video_url)
-        elif download_type == "Audio":
-            download_audio(video_url)
+    # 下載影片或音頻
+    if submit and url:
+        try:
+            download(url, format)
+        except Exception as e:
+            st.error('下載失敗：{}'.format(e))
 
-if __name__ == "__main__":
+# 運行應用程序
+if __name__ == '__main__':
     main()
