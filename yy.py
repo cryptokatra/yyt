@@ -6,10 +6,10 @@ import pandas as pd
 st.set_page_config(page_title="YouTube Downloader", page_icon=":computer:", layout="wide")
 
 st.title("YouTube Downloader")
-st.markdown("請輸入 YouTube 影片鏈接:")
+st.markdown("<h3>請輸入 YouTube 影片鏈接:</h3>", unsafe_allow_html=True)
 
 # 輸入框
-url = st.text_input("")
+url = st.text_input("請輸入鏈接：")
 
 # 檢查輸入是否為正確的YouTube鏈接
 if "youtube.com" not in url:
