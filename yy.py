@@ -3,8 +3,9 @@ import youtube_dl
 
 def download(url):
     ydl_opts = {
-        'format': 'bestvideo[height<=720]+bestaudio/best[height<=720]',
-        'outtmpl': '%(title)s.%(ext)s'
+        'format': 'best',
+        'outtmpl': '%(title)s.%(ext)s',
+        'verbose': True
     }
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
         ydl.download([url])
