@@ -1,44 +1,31 @@
 import streamlit as st
-from pytube import YouTube
+import youtube_dl
 
-st.title("YouTube Downloader")
-
-# Get YouTube video URL from user
-url = st.text_input("Enter YouTube video URL")
-
-# Download video or audio
-type_to_download = st.selectbox("Choose which type of file to download", ["Video", "Audio"])
-
-# Download function
+# 根据给定的URL下载视频
 def download_video(url):
-    yt = YouTube(url)
+    try:
+        with youtube_dl.YoutubeDL({}) as ydl:
+            info = ydl.extract_info(url, download=False)
+            formats = info.get('formats',None)
+            for f in formats:
+                if f.get('format_id',None) == '22':
+                    ydl.download([url])
+                    return True
+        return False
+    except Exception as e:
+        st.write("Error:", e)
+        return False
 
-    # Get available video and audio streams
-    streams = yt.streams.filter(progressive=True, file_extension="mp4")
-    audio_streams = yt.streams.filter(only_audio=True)
+# 主应用程序
+def main():
+    st.title("YouTube Downloader")
+    st.write("Enter the YouTube URL below to download the video")
+    url = st.text_input("URL")
+    if st.button("Download"):
+        if download_video(url):
+            st.write("Downloaded Successfully!")
+        else:
+            st.write("Download Failed! Please Try Again.")
 
-    # Display available streams to user
-    st.write("Available video streams:")
-    for stream in streams:
-        st.write(stream.resolution, stream.mime_type, stream.filesize)
-
-    st.write("Available audio streams:")
-    for stream in audio_streams:
-        st.write(stream.abr, stream.mime_type, stream.filesize)
-
-    # Choose stream and download
-    if type_to_download == "Video":
-        chosen_stream = st.selectbox("Choose video stream to download", streams)
-    elif type_to_download == "Audio":
-        chosen_stream = st.selectbox("Choose audio stream to download", audio_streams)
-
-    st.write("Downloading...")
-    chosen_stream.download()
-    st.write("Download complete.")
-
-# Download button
-if st.button("Download"):
-    if url == "":
-        st.write("Please enter a URL.")
-    else:
-        download_video(url)
+if __name__ == "__main__":
+    main()
