@@ -4,7 +4,7 @@ import youtube_dl
 # 根据给定的URL下载视频
 def download_video(url):
     try:
-        with youtube_dl.YoutubeDL({}) as ydl:
+        with youtube_dl.YoutubeDL({'verbose': True}) as ydl:
             info = ydl.extract_info(url, download=False)
             formats = info.get('formats',None)
             for f in formats:
